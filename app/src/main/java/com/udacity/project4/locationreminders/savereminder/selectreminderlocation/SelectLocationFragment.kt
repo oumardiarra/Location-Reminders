@@ -45,19 +45,22 @@ class SelectLocationFragment : BaseFragment() {
     private lateinit var googleMap: GoogleMap
     private val runningQOrLater =
         android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q
+    private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
 
     //Use Koin to get the view model of the SaveReminder
     override val _viewModel: SaveReminderViewModel by inject()
     private lateinit var binding: FragmentSelectLocationBinding
     private val callback = OnMapReadyCallback { gMap ->
+        Timber.e("OnMapReadyCallback")
         googleMap = gMap
+        foregroundAndBackgroundLocationPermission()
         addPOI(googleMap)
     }
 
     override fun onStart() {
         super.onStart()
         Timber.i("foregroundAndBackgroundLocationPermission")
-        foregroundAndBackgroundLocationPermission()
+
     }
 
     private fun foregroundAndBackgroundLocationPermissionApproved(): Boolean {
@@ -77,8 +80,25 @@ class SelectLocationFragment : BaseFragment() {
         return foregroundLocationApproved && backgroundLocationApproved
     }
 
+    @SuppressLint("MissingPermission")
+    fun zoomToDeviceLocation() {
+        fusedLocationProviderClient.lastLocation.addOnSuccessListener(requireActivity()) { location ->
+            if (location != null) {
+                val userLatLng = LatLng(location.latitude, location.longitude)
+                val zoomLevel = 15f
+                googleMap.moveCamera(
+                    CameraUpdateFactory.newLatLngZoom(
+                        userLatLng,
+                        zoomLevel
+                    )
+                )
+            }
+        }
+    }
+
     private fun foregroundAndBackgroundLocationPermission() {
         if (foregroundAndBackgroundLocationPermissionApproved()) {
+            zoomToDeviceLocation()
             checkDeviceLocationSettingsAndStartGeofence()
             //return
         }
@@ -99,7 +119,6 @@ class SelectLocationFragment : BaseFragment() {
     }
 
 
-
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View? {
@@ -111,13 +130,12 @@ class SelectLocationFragment : BaseFragment() {
 
         setHasOptionsMenu(true)
         setDisplayHomeAsUpEnabled(true)
-        _viewModel.currentLocationSet.observe(viewLifecycleOwner, Observer {
-
-        })
 
 //        TODO: add the map setup implementation
         val mapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment?.getMapAsync(callback)
+        fusedLocationProviderClient =
+            LocationServices.getFusedLocationProviderClient(requireContext())
 //        TODO: zoom to the user location after taking his permission
 
 //        TODO: add style to the map
@@ -149,15 +167,19 @@ class SelectLocationFragment : BaseFragment() {
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
         // TODO: Change the map type based on the user's selection.
         R.id.normal_map -> {
+            googleMap.mapType = GoogleMap.MAP_TYPE_NORMAL
             true
         }
         R.id.hybrid_map -> {
+            googleMap.mapType = GoogleMap.MAP_TYPE_HYBRID
             true
         }
         R.id.satellite_map -> {
+            googleMap.mapType = GoogleMap.MAP_TYPE_SATELLITE
             true
         }
         R.id.terrain_map -> {
+            googleMap.mapType = GoogleMap.MAP_TYPE_TERRAIN
             true
         }
         else -> super.onOptionsItemSelected(item)
@@ -185,6 +207,7 @@ class SelectLocationFragment : BaseFragment() {
                 })
             }.show()
         } else {
+            zoomToDeviceLocation()
             Timber.i("checkDeviceLocationSettingsAndStartGeofence")
             checkDeviceLocationSettingsAndStartGeofence()
         }
@@ -234,18 +257,7 @@ class SelectLocationFragment : BaseFragment() {
             if (it.isSuccessful) {
 
                 googleMap.isMyLocationEnabled = true
-                LocationServices.getFusedLocationProviderClient(requireContext()).lastLocation.addOnSuccessListener { location ->
-                    if (location != null) {
-                        val userLatLng = LatLng(location.latitude, location.longitude)
-                        val zoomLevel = 15f
-                        googleMap.moveCamera(
-                            CameraUpdateFactory.newLatLngZoom(
-                                userLatLng,
-                                zoomLevel
-                            )
-                        )
-                    }
-                }
+
 
                 // addGeofenceForClue()
             }
