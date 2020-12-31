@@ -36,6 +36,7 @@ import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
 import org.koin.android.ext.android.inject
 import timber.log.Timber
+import java.lang.Exception
 
 class SelectLocationFragment : BaseFragment() {
     private val REQUEST_LOCATION_PERMISSION = 1
@@ -53,6 +54,7 @@ class SelectLocationFragment : BaseFragment() {
     private val callback = OnMapReadyCallback { gMap ->
         Timber.e("OnMapReadyCallback")
         googleMap = gMap
+        setMapStyle(googleMap)
         foregroundAndBackgroundLocationPermission()
         addPOI(googleMap)
     }
@@ -277,6 +279,21 @@ class SelectLocationFragment : BaseFragment() {
             poiMarker.showInfoWindow()
         }
 
+    }
+
+    private fun setMapStyle(map: GoogleMap) {
+        try {
+            // Customize the styling of the base map using a JSON object defined
+            // in a raw resource file.
+            val success = map.setMapStyle(
+                MapStyleOptions.loadRawResourceStyle(
+                    context,
+                    R.raw.map_style
+                )
+            )
+        } catch (exc: Exception) {
+            Timber.e("Exception getting the file")
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

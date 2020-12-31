@@ -25,6 +25,14 @@ import org.junit.runner.RunWith
 @MediumTest
 class RemindersLocalRepositoryTest {
 
-//    TODO: Add testing implementation to the RemindersLocalRepository.kt
-
+    //    TODO: Add testing implementation to the RemindersLocalRepository.kt
+    private val reminder1 = ReminderDTO(
+        title = "soccer game with friends",
+        description = "playing a soccer game with some friends",
+        location = "",
+        latitude = 51.022,
+        longitude = 25433.12
+    )
+    private val reminderList = listOf(reminder1).sortedBy { it.id }
+  //  private lateinit var localDataSource:FakeDataSource
 }

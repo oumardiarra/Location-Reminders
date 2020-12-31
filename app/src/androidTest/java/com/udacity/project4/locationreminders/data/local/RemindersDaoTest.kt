@@ -24,7 +24,62 @@ import org.junit.Test
 //Unit test the DAO
 @SmallTest
 class RemindersDaoTest {
+    //    TODO: Add testing implementation to the RemindersDao.kt
+    @get:Rule
+    var instantExecutorRule = InstantTaskExecutorRule()
+    private lateinit var database: RemindersDatabase
 
-//    TODO: Add testing implementation to the RemindersDao.kt
+    @Before
+    fun initDB() {
+        database = Room.inMemoryDatabaseBuilder(
+            ApplicationProvider.getApplicationContext(),
+            RemindersDatabase::class.java
+        ).build()
+    }
+
+    @After
+    fun closeDB() = database.close()
+
+    @Test
+    fun saveReminderAndGetById() = runBlockingTest {
+        //GIVEN save reminder
+        val reminder = ReminderDTO(
+            title = "soccer game with friends",
+            description = "playing a soccer game with some friends",
+            location = "",
+            latitude = 51.022,
+            longitude = 25433.12
+        )
+        database.reminderDao().saveReminder(reminder)
+        //WHEN - Get the reminder by id from the database
+        val loaded = database.reminderDao().getReminderById(reminder.id)
+        //THEN the loaded data contains the expected value
+        assertThat<ReminderDTO>(loaded as ReminderDTO, notNullValue())
+        assertThat(loaded.id, `is`(reminder.id))
+        assertThat(loaded.description, `is`(reminder.description))
+        assertThat(loaded.location, `is`(reminder.location))
+        assertThat(loaded.latitude, `is`(reminder.latitude))
+        assertThat(loaded.longitude, `is`(reminder.longitude))
+    }
+
+    @Test
+    fun deleteAllRemindersAndReminders() = runBlockingTest {
+        //GIVEN a saved reminder
+        val reminder = ReminderDTO(
+            title = "soccer game with friends",
+            description = "playing a soccer game with some friends",
+            location = "",
+            latitude = 51.022,
+            longitude = 25433.12
+        )
+        database.reminderDao().saveReminder(reminder)
+        //WHEN deleting all reminders
+        database.reminderDao().deleteAllReminders()
+        //Then the list is empty
+        val reminders = database.reminderDao().getReminders()
+
+        assertThat(reminders.isEmpty(), `is`(true))
+
+    }
 
 }
