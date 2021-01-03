@@ -3,6 +3,7 @@ package com.udacity.project4.locationreminders.savereminder.selectreminderlocati
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.annotation.TargetApi
 import android.app.Activity
 import android.content.Intent
 import android.content.IntentSender
@@ -56,7 +57,10 @@ class SelectLocationFragment : BaseFragment() {
         googleMap = gMap
         setMapStyle(googleMap)
         foregroundAndBackgroundLocationPermission()
+        zoomToDeviceLocation()
         addPOI(googleMap)
+        addMapClik(googleMap)
+
     }
 
     override fun onStart() {
@@ -65,6 +69,7 @@ class SelectLocationFragment : BaseFragment() {
 
     }
 
+    @TargetApi(29)
     private fun foregroundAndBackgroundLocationPermissionApproved(): Boolean {
         val foregroundLocationApproved =
             (PackageManager.PERMISSION_GRANTED == ActivityCompat.checkSelfPermission(
@@ -72,6 +77,7 @@ class SelectLocationFragment : BaseFragment() {
             ))
         val backgroundLocationApproved =
             if (runningQOrLater) {
+
                 PackageManager.PERMISSION_GRANTED == ActivityCompat.checkSelfPermission(
                     requireContext(),
                     Manifest.permission.ACCESS_BACKGROUND_LOCATION
@@ -98,13 +104,16 @@ class SelectLocationFragment : BaseFragment() {
         }
     }
 
+    @TargetApi(29)
     private fun foregroundAndBackgroundLocationPermission() {
+        Timber.e("foregroundAndBackgroundLocationPermissionApproved is ${foregroundAndBackgroundLocationPermissionApproved()}")
         if (foregroundAndBackgroundLocationPermissionApproved()) {
-            zoomToDeviceLocation()
+            // zoomToDeviceLocation()
             checkDeviceLocationSettingsAndStartGeofence()
-            //return
+            //  return
         }
         var permissionsArray = arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
+        Timber.e("runningQOrLater is ${runningQOrLater}")
         val resultCode = when {
             runningQOrLater -> {
                 permissionsArray += Manifest.permission.ACCESS_BACKGROUND_LOCATION
@@ -113,6 +122,7 @@ class SelectLocationFragment : BaseFragment() {
             else ->
                 REQUEST_FOREGROUND_ONLY_PERMISSIONS_REQUEST_CODE
         }
+        Timber.e("resultCode is ${resultCode}")
         ActivityCompat.requestPermissions(
             requireActivity(),
             permissionsArray,
@@ -209,8 +219,8 @@ class SelectLocationFragment : BaseFragment() {
                 })
             }.show()
         } else {
-            zoomToDeviceLocation()
-            Timber.i("checkDeviceLocationSettingsAndStartGeofence")
+            // zoomToDeviceLocation()
+            Timber.e("onRequestPermissionsResult else called")
             checkDeviceLocationSettingsAndStartGeofence()
         }
     }
@@ -276,6 +286,24 @@ class SelectLocationFragment : BaseFragment() {
             val poiMarker = map.addMarker(
                 MarkerOptions().position(poi.latLng).title(poi.name)
             )
+            poiMarker.showInfoWindow()
+        }
+
+    }
+
+    fun addMapClik(map: GoogleMap) {
+        map.setOnMapClickListener {
+            binding.buttonSave.visibility = View.VISIBLE
+            binding.buttonSave.setOnClickListener { view ->
+                _viewModel.latitude.value = it.latitude
+                _viewModel.longitude.value = it.longitude
+                _viewModel.reminderSelectedLocationStr.value = "Custom location used"
+                findNavController().popBackStack()
+            }
+
+            val cameraUpdate = CameraUpdateFactory.newLatLngZoom(it, 15f)
+            map.moveCamera(cameraUpdate)
+            val poiMarker = map.addMarker(MarkerOptions().position(it))
             poiMarker.showInfoWindow()
         }
 
