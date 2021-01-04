@@ -33,14 +33,14 @@ class RemindersActivity : AppCompatActivity() {
                 (nav_host_fragment as NavHostFragment).navController.popBackStack()
                 return true
             }
-            R.id.logout -> {
+         /*   R.id.logout -> {
                 Timber.i("LogOut clicked")
                 AuthUI.getInstance().signOut(this).addOnCompleteListener {
                     Timber.i("LogOut success")
                     navController.navigate(R.id.authenticationActivity)
                 }
                 return true
-            }
+            }*/
         }
         return super.onOptionsItemSelected(item)
     }
