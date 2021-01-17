@@ -53,11 +53,6 @@ Explain what each test does and why
 
 
 
-## Student Deliverables:
-
-1. APK file of the final project.
-2. Git Repository with the code.
-
 ## Built With
 
 * [Koin](https://github.com/InsertKoinIO/koin) - A pragmatic lightweight dependency injection framework for Kotlin.
